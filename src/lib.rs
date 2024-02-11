@@ -1,3 +1,5 @@
+pub mod core;
+
 use std::ops::Add;
 
 pub fn add<T: Add>(a: T, b: T) -> <T as Add>::Output {
