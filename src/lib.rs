@@ -5,12 +5,15 @@
 #![feature(const_ptr_is_null)]
 #![feature(const_ptr_write)]
 #![feature(core_intrinsics)]
-#![feature(rustc_attrs)]
-#![feature(strict_provenance)]
+#![feature(generic_const_exprs)]
 #![feature(no_core)]
 #![feature(ptr_metadata)]
+#![feature(rustc_attrs)]
+#![feature(strict_provenance)]
+#![feature(transparent_unions)]
 // END FEATURES
 #![allow(internal_features)]
+#![allow(incomplete_features)]
 // Remove the binding to std
 #![no_std]
 // Remove the binding to rust core, not actually activate to continu to have useful core
