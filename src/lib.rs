@@ -1,10 +1,14 @@
 // FEATURES
+#![feature(const_for)]
 #![feature(const_intrinsic_copy)]
 #![feature(const_mut_refs)]
 #![feature(const_ptr_is_null)]
 #![feature(const_ptr_write)]
+#![feature(core_intrinsics)]
 #![feature(rustc_attrs)]
+#![feature(strict_provenance)]
 #![feature(no_core)]
+#![feature(ptr_metadata)]
 // END FEATURES
 #![allow(internal_features)]
 // Remove the binding to std
