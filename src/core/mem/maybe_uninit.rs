@@ -5,21 +5,22 @@ use crate::core::ptr::{drop_in_place, read, write};
 
 #[repr(transparent)]
 pub union MaybeUninit<T> {
+    // TODO: replace me with super::manually_drop::ManuallyDrop
     value: ManuallyDrop<T>,
     uninit: ()
 }
 
 impl<T> MaybeUninit<T> {
     pub const fn new(value: T) -> Self {
-        MaybeUninit { value: ManuallyDrop::new(value) }
+        Self { value: ManuallyDrop::new(value) }
     }
 
     pub const fn uninit() -> Self {
-        MaybeUninit { uninit: () }
+        Self { uninit: () }
     }
     
     pub const fn uninit_array<const N: usize>() -> [Self; N] {
-        unsafe { MaybeUninit::<[MaybeUninit<T>; N]>::uninit().assume_init() }
+        unsafe { MaybeUninit::<[Self; N]>::uninit().assume_init() }
     }
 
     pub const fn zeroed() -> Self

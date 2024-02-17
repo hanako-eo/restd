@@ -6,6 +6,7 @@
 #![feature(const_ptr_write)]
 #![feature(core_intrinsics)]
 #![feature(generic_const_exprs)]
+#![feature(lang_items)]
 #![feature(no_core)]
 #![feature(ptr_metadata)]
 #![feature(rustc_attrs)]
