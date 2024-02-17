@@ -1,6 +1,24 @@
-pub mod core;
+// FEATURES
+#![feature(const_intrinsic_copy)]
+#![feature(const_mut_refs)]
+#![feature(const_ptr_is_null)]
+#![feature(const_ptr_write)]
+#![feature(rustc_attrs)]
+#![feature(no_core)]
+// END FEATURES
+#![allow(internal_features)]
+// Remove the binding to std
+#![no_std]
+// Remove the binding to rust core, not actually activate to continu to have useful core
+// functions, traits and more
+// #![no_core]
 
-use std::ops::Add;
+// Make an alias of the rust core lib into native_core
+extern crate core as native_core;
+
+use native_core::ops::Add;
+
+pub mod core;
 
 pub fn add<T: Add>(a: T, b: T) -> <T as Add>::Output {
     a + b
