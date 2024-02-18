@@ -1,10 +1,14 @@
-use native_core::mem::MaybeUninit;
-
-use crate::core::option::Option;
+use crate::core::{
+    clone::Clone,
+    marker::{Copy, Sized},
+    mem::MaybeUninit,
+    option::Option,
+};
 
 #[repr(transparent)]
 pub struct NonNull<T: ?Sized>(*mut T);
 
+// TODO: implement all method for *mut T and *const T
 impl<T: ?Sized> NonNull<T> {
     #[inline]
     pub const unsafe fn new_unchecked(ptr: *mut T) -> NonNull<T> {

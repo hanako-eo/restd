@@ -1,9 +1,10 @@
-use native_core::ops::{Deref, DerefMut};
-
+use crate::core::clone::Clone;
+use crate::core::marker::Copy;
+use crate::core::ops::{Deref, DerefMut};
 use crate::core::ptr::{drop_in_place, read};
 
-// #[lang = "manually_drop"]
-#[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
+// #[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
+#[lang = "manually_drop"]
 #[repr(transparent)]
 pub struct ManuallyDrop<T> {
     value: T,
@@ -42,3 +43,11 @@ impl<T> DerefMut for ManuallyDrop<T> {
         &mut self.value
     }
 }
+
+impl<T: Clone> Clone for ManuallyDrop<T> {
+    fn clone(&self) -> Self {
+        ManuallyDrop::new(self.value.clone())
+    }
+}
+
+impl<T: Copy> Copy for ManuallyDrop<T> {}

@@ -1,38 +1,42 @@
 // FEATURES
+#![feature(allow_internal_unstable)]
+#![feature(arbitrary_self_types)]
+#![feature(auto_traits)]
+#![feature(const_extern_fn)]
 #![feature(const_for)]
-#![feature(const_intrinsic_copy)]
+// #![feature(const_intrinsic_copy)]
 #![feature(const_mut_refs)]
-#![feature(const_ptr_is_null)]
-#![feature(const_ptr_write)]
-#![feature(core_intrinsics)]
+// #![feature(const_ptr_is_null)]
+// #![feature(const_ptr_write)]
+// #![feature(core_intrinsics)]
 #![feature(generic_const_exprs)]
+#![feature(generic_const_items)]
+#![feature(intrinsics)]
 #![feature(lang_items)]
+#![feature(negative_impls)]
+#![feature(never_type)]
 #![feature(no_core)]
-#![feature(ptr_metadata)]
+// #![feature(ptr_metadata)]
 #![feature(rustc_attrs)]
+#![feature(rustc_allow_const_fn_unstable)]
 #![feature(strict_provenance)]
 #![feature(transparent_unions)]
+#![feature(unboxed_closures)]
 // END FEATURES
 #![allow(internal_features)]
 #![allow(incomplete_features)]
 // Remove the binding to std
 #![no_std]
-// Remove the binding to rust core, not actually activate to continu to have useful core
-// functions, traits and more
-// #![no_core]
-
-// Make an alias of the rust core lib into native_core
-extern crate core as native_core;
-
-use native_core::ops::Add;
+// Remove the binding to rust core
+#![no_core]
 
 pub mod core;
 
-pub fn add<T: Add>(a: T, b: T) -> <T as Add>::Output {
-    a + b
-}
+// pub fn add<T: Add>(a: T, b: T) -> <T as Add>::Output {
+//     a + b
+// }
 
-#[test]
-fn test_add() {
-    assert_eq!(add(2, 2), 4)
-}
+// #[test]
+// fn test_add() {
+//     assert_eq!(add(2, 2), 4)
+// }

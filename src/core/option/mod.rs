@@ -1,8 +1,13 @@
-use native_core::ops::Deref;
-
 use crate::matches;
 
 use self::Option::*;
+
+use super::{
+    clone::Clone,
+    default::Default,
+    marker::Copy,
+    ops::{Deref, FnOnce},
+};
 
 pub enum Option<T> {
     Some(T),
@@ -113,13 +118,13 @@ impl<T> Option<T> {
     // pub unsafe fn unwrap_unchecked(self) -> T {}
 
     // const need compiled time Drop, not the case for now
-    #[inline]
-    pub fn unwrap(self) -> T {
-        match self {
-            Some(value) => value,
-            None => panic!("no value for `Option::None`"),
-        }
-    }
+    // #[inline]
+    // pub fn unwrap(self) -> T {
+    //     match self {
+    //         Some(value) => value,
+    //         None => panic!("no value for `Option::None`"),
+    //     }
+    // }
 
     #[inline]
     pub fn unwrap_or(self, otherwise: T) -> T {

@@ -1,8 +1,13 @@
-use native_core::{fmt::Debug, ops::Deref};
-
 use crate::matches;
 
 use self::Result::*;
+
+use super::{
+    clone::Clone,
+    default::Default,
+    marker::Copy,
+    ops::{Deref, FnOnce},
+};
 
 pub enum Result<T, E> {
     Ok(T),
@@ -102,16 +107,16 @@ impl<T, E> Result<T, E> {
     // #[inline]
     // pub unsafe fn unwrap_unchecked(self) -> T {}
 
-    #[inline]
-    pub fn unwrap(self) -> T
-    where
-        E: Debug,
-    {
-        match self {
-            Ok(value) => value,
-            Err(err) => panic!("no value for `Result::Err({:?})`", err),
-        }
-    }
+    // #[inline]
+    // pub fn unwrap(self) -> T
+    // where
+    //     E: Debug,
+    // {
+    //     match self {
+    //         Ok(value) => value,
+    //         Err(err) => panic!("no value for `Result::Err({:?})`", err),
+    //     }
+    // }
 
     #[inline]
     pub fn unwrap_or(self, otherwise: T) -> T {

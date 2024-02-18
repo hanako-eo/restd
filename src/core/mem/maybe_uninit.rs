@@ -1,7 +1,11 @@
-use native_core::intrinsics::{size_of, transmute_unchecked};
-use native_core::mem::ManuallyDrop;
+use crate::core::{
+    clone::Clone,
+    intrinsics::{size_of, transmute_unchecked},
+    marker::Copy,
+    ptr::{drop_in_place, read, write},
+};
 
-use crate::core::ptr::{drop_in_place, read, write};
+use super::manually_drop::ManuallyDrop;
 
 #[repr(transparent)]
 pub union MaybeUninit<T> {
