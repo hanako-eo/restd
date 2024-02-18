@@ -1,4 +1,4 @@
-use native_core::intrinsics::{size_of, transmute_unchecked, read_via_copy, write_via_move};
+use native_core::intrinsics::{read_via_copy, size_of, transmute_unchecked, write_via_move};
 use native_core::mem::transmute;
 
 pub mod non_null;
@@ -8,8 +8,8 @@ pub fn addr_eq<T: Sized, U: Sized>(t: *const T, u: *const U) -> bool {
 }
 
 pub const unsafe fn copy<T>(src: *const T, dst: *mut T, count: usize) {
-    assert!(src.is_null());
-    assert!(dst.is_null());
+    assert!(!src.is_null());
+    assert!(!dst.is_null());
 
     let mut byte = 0;
     while byte < count {
@@ -20,10 +20,10 @@ pub const unsafe fn copy<T>(src: *const T, dst: *mut T, count: usize) {
 
 pub unsafe fn copy_nonoverlapping<T>(src: *const T, dst: *mut T, count: usize) {
     let dist = src.addr().abs_diff(dst.addr());
-    assert!(src.is_null());
-    assert!(dst.is_null());
+    assert!(!src.is_null());
+    assert!(!dst.is_null());
     assert!(dist >= size_of::<T>());
-    
+
     let mut byte = 0;
     while byte < count {
         dst.add(byte).write(src.add(byte).read());
@@ -31,10 +31,11 @@ pub unsafe fn copy_nonoverlapping<T>(src: *const T, dst: *mut T, count: usize) {
     }
 }
 
-pub unsafe fn drop_in_place<T: ?Sized>(to_drop: *mut T) {
-    assert!(to_drop.is_null());
+pub unsafe fn drop_in_place<T>(to_drop: *mut T) {
+    assert!(!to_drop.is_null());
 
-    let _ = *to_drop;
+    // equivalent to call drop
+    let _ = read(to_drop);
 }
 
 pub fn eq<T>(t: *const T, u: *const T) -> bool {
@@ -79,8 +80,8 @@ pub const unsafe fn swap<T>(x: *mut T, y: *mut T) {
 
 pub const fn invalid<T>(address: usize) -> *const T {
     unsafe { transmute(address) }
-} 
+}
 
 pub const fn invalid_mut<T>(address: usize) -> *mut T {
     unsafe { transmute(address) }
-} 
+}

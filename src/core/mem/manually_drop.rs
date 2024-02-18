@@ -6,7 +6,7 @@ use crate::core::ptr::{drop_in_place, read};
 #[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct ManuallyDrop<T> {
-    value: T
+    value: T,
 }
 
 impl<T> ManuallyDrop<T> {
@@ -14,7 +14,7 @@ impl<T> ManuallyDrop<T> {
         Self { value }
     }
 
-    pub /*const*/ fn into_inner(self: Self) -> T {
+    pub fn into_inner(self: Self) -> T {
         self.value
     }
 

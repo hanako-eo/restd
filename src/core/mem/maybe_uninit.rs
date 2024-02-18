@@ -7,29 +7,34 @@ use crate::core::ptr::{drop_in_place, read, write};
 pub union MaybeUninit<T> {
     // TODO: replace me with super::manually_drop::ManuallyDrop
     value: ManuallyDrop<T>,
-    uninit: ()
+    uninit: (),
 }
 
 impl<T> MaybeUninit<T> {
     pub const fn new(value: T) -> Self {
-        Self { value: ManuallyDrop::new(value) }
+        Self {
+            value: ManuallyDrop::new(value),
+        }
     }
 
     pub const fn uninit() -> Self {
         Self { uninit: () }
     }
-    
+
     pub const fn uninit_array<const N: usize>() -> [Self; N] {
         unsafe { MaybeUninit::<[Self; N]>::uninit().assume_init() }
     }
 
     pub const fn zeroed() -> Self
     where
-        [(); size_of::<T>()]:
+        [(); size_of::<T>()]:,
     {
         let mut uninit = Self::uninit();
         unsafe {
-            write(uninit.as_mut() as *mut [u8; size_of::<T>()], [0; size_of::<T>()])
+            write(
+                uninit.as_mut_ptr() as *mut [u8; size_of::<T>()],
+                [0; size_of::<T>()],
+            )
         };
         uninit
     }
@@ -38,12 +43,12 @@ impl<T> MaybeUninit<T> {
         self as *const _ as *const T
     }
 
-    pub const fn as_mut(&mut self) -> *mut T {
+    pub const fn as_mut_ptr(&mut self) -> *mut T {
         self as *mut _ as *mut T
     }
-    
+
     pub fn write(&mut self, value: T) -> &mut T {
-        let ptr = self.as_mut();
+        let ptr = self.as_mut_ptr();
         unsafe {
             write(ptr, value);
             &mut *ptr
@@ -59,7 +64,7 @@ impl<T> MaybeUninit<T> {
     }
 
     pub unsafe fn assume_init_drop(&mut self) {
-        drop_in_place(self.as_mut());
+        drop_in_place(self.as_mut_ptr());
     }
 
     pub unsafe fn assume_init_ref(&mut self) -> &T {
@@ -67,9 +72,8 @@ impl<T> MaybeUninit<T> {
     }
 
     pub unsafe fn assume_init_mut(&mut self) -> &mut T {
-        &mut *self.as_mut()
+        &mut *self.as_mut_ptr()
     }
-
 }
 
 impl<T, const N: usize> MaybeUninit<[T; N]> {
@@ -84,4 +88,4 @@ impl<T: Copy> Clone for MaybeUninit<T> {
     }
 }
 
-impl<T: Copy> Copy for MaybeUninit<T> { }
+impl<T: Copy> Copy for MaybeUninit<T> {}
