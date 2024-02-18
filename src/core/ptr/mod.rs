@@ -1,7 +1,5 @@
-use super::{
-    intrinsics::{read_via_copy, transmute, transmute_unchecked, write_via_move},
-    marker::Sized,
-};
+use super::intrinsics::{read_via_copy, transmute, transmute_unchecked, write_via_move};
+use super::marker::Sized;
 
 pub mod non_null;
 

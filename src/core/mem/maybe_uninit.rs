@@ -1,11 +1,8 @@
-use crate::core::{
-    clone::Clone,
-    intrinsics::{size_of, transmute_unchecked},
-    marker::Copy,
-    ptr::{drop_in_place, read, write},
-};
-
 use super::manually_drop::ManuallyDrop;
+use crate::core::clone::Clone;
+use crate::core::intrinsics::{size_of, transmute_unchecked};
+use crate::core::marker::Copy;
+use crate::core::ptr::{drop_in_place, read, write};
 
 #[repr(transparent)]
 pub union MaybeUninit<T> {

@@ -1,9 +1,7 @@
-use crate::core::{
-    clone::Clone,
-    marker::{Copy, Sized},
-    mem::MaybeUninit,
-    option::Option,
-};
+use crate::core::clone::Clone;
+use crate::core::marker::{Copy, Sized};
+use crate::core::mem::MaybeUninit;
+use crate::core::option::Option;
 
 #[repr(transparent)]
 pub struct NonNull<T: ?Sized>(*mut T);

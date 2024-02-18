@@ -1,13 +1,9 @@
-use crate::matches;
-
 use self::Result::*;
-
-use super::{
-    clone::Clone,
-    default::Default,
-    marker::Copy,
-    ops::{Deref, FnOnce},
-};
+use super::clone::Clone;
+use super::default::Default;
+use super::marker::Copy;
+use super::ops::{Deref, FnOnce};
+use crate::matches;
 
 pub enum Result<T, E> {
     Ok(T),
