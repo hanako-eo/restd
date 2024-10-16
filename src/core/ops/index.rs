@@ -8,8 +8,6 @@ pub trait Index<Idx: ?Sized> {
 }
 
 #[lang = "index_mut"]
-pub trait IndexMut<Idx: ?Sized> {
-    type Output: ?Sized;
-
-    fn index(&mut self, index: Idx) -> &Self::Output;
+pub trait IndexMut<Idx: ?Sized>: Index<Idx> {
+    fn index_mut(&mut self, index: Idx) -> &mut Self::Output;
 }
