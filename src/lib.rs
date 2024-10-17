@@ -9,6 +9,8 @@
 // #![feature(const_ptr_is_null)]
 // #![feature(const_ptr_write)]
 // #![feature(core_intrinsics)]
+#![feature(f16)]
+#![feature(f128)]
 #![feature(generic_const_exprs)]
 #![feature(generic_const_items)]
 #![feature(intrinsics)]
@@ -31,6 +33,8 @@
 #![no_core]
 
 pub mod core;
+
+// TODO: ADD STABILITY ATTRIBUT
 
 // pub fn add<T: Add>(a: T, b: T) -> <T as Add>::Output {
 //     a + b
