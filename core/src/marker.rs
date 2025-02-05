@@ -1,9 +1,13 @@
 use super::clone::Clone;
 
+// #[lang = "send"]
 pub unsafe auto trait Send {}
 
+#[lang = "sync"]
 pub unsafe auto trait Sync {}
 
+#[rustc_diagnostic_item = "Unpin"]
+#[lang = "unpin"]
 pub auto trait Unpin {}
 
 #[lang = "sized"]
@@ -17,12 +21,12 @@ pub trait Copy: Clone {}
 #[lang = "phantom_data"]
 pub struct PhantomData<T: ?Sized>;
 
-pub struct PhantomPinned;
-
 impl<T: ?Sized> Clone for PhantomData<T> {
     fn clone(&self) -> Self {
-        PhantomData
+        Self
     }
 }
 
 impl<T: ?Sized> Copy for PhantomData<T> {}
+
+pub struct PhantomPinned;

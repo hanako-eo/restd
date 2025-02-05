@@ -1,14 +1,38 @@
-#![macro_use]
-
 #[macro_export]
-macro_rules! matches {
-    ($cond:expr, $pat:pat $(if $guard:expr)? $(,)?) => {
-        match $cond {
-            $pat $(if $guard)? => true,
-            _ => false
-        }
+#[rustc_builtin_macro(core_panic)]
+#[allow_internal_unstable(edition_panic)]
+#[unstable(feature = "core_panicking_macro", issue = "none")]
+#[rustc_diagnostic_item = "core_panic_macro"]
+macro_rules! panic {
+    // Expands to either `$crate::panic::panic_2015` or `$crate::panic::panic_2021`
+    // depending on the edition of the caller.
+    ($($arg:tt)*) => {
+        /* compiler built-in */
     };
 }
+
+#[macro_export]
+#[rustc_builtin_macro(unreachable)]
+#[allow_internal_unstable(edition_panic)]
+#[unstable(feature = "core_panicking_macro", issue = "none")]
+#[cfg_attr(not(test), rustc_diagnostic_item = "unreachable_macro")]
+macro_rules! unreachable {
+    // Expands to either `$crate::panic::unreachable_2015` or `$crate::panic::unreachable_2021`
+    // depending on the edition of the caller.
+    ($($arg:tt)*) => {
+        /* compiler built-in */
+    };
+}
+
+// #[macro_export]
+// macro_rules! matches {
+//     ($cond:expr, $pat:pat $(if $guard:expr)? $(,)?) => {
+//         match $cond {
+//             $pat $(if $guard)? => true,
+//             _ => false
+//         }
+//     };
+// }
 
 /// This macro implement the version of "&T" for unary operators
 macro_rules! forward_ref_unop {
