@@ -1,0 +1,5 @@
+error: `foo_auto` item must be an auto trait
+ --> tests/ui/fail/foo_auto.rs:2:1
+  |
+2 | trait Foo {}
+  | ^^^^^^^^^^^^

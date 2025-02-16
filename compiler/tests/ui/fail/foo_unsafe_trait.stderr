@@ -1,0 +1,5 @@
+error: `foo_unsafe` item must be an unsafe trait
+ --> tests/ui/fail/foo_unsafe_trait.rs:2:1
+  |
+2 | trait Foo {}
+  | ^^^^^^^^^^^^

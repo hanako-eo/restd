@@ -1,0 +1,5 @@
+error: `foo_const` item must be a const trait
+ --> tests/ui/fail/foo_const.rs:2:1
+  |
+2 | trait Foo {}
+  | ^^^^^^^^^^^^

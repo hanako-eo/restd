@@ -1,0 +1,5 @@
+error: `foo_fn_unsafe` item must be an unsafe function
+ --> tests/ui/fail/foo_unsafe_fn.rs:2:1
+  |
+2 | fn foo() {}
+  | ^^^^^^^^^^^
