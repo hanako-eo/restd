@@ -54,6 +54,7 @@ impl Target {
     }
 }
 
+#[allow(unused_imports)]
 pub(crate) use Constraint::*;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Constraint {
@@ -86,7 +87,7 @@ macro_rules! lang_item_table {
     ($($(#[$attr:meta])* $variant:ident, $name:literal, $target:expr, [$($constraint:expr),*], $diag_item:literal, $lang_item:literal;)*) => {
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
         pub enum LangItem {
-            $($variant,)*
+            $($(#[$attr])* $variant,)*
         }
 
         impl TryFrom<syn::LitStr> for LangItem {
@@ -94,7 +95,7 @@ macro_rules! lang_item_table {
         
             fn try_from(value: syn::LitStr) -> Result<Self, Self::Error> {
                 match value.value().as_str() {
-                    $($name => Ok(Self::$variant),)*
+                    $($(#[$attr])* $name => Ok(Self::$variant),)*
                     lit => Err(syn::Error::new_spanned(value, format!("\"{lit}\" is not a valid compiler lang item."))),
                 }
             }
@@ -102,8 +103,9 @@ macro_rules! lang_item_table {
 
         impl ToTokens for LangItem {
             fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-                match self {
-                    $(Self::$variant => {
+                match self {$(
+                    $(#[$attr])*
+                    Self::$variant => {
                         let diag_item = $diag_item.then(|| {
                             let variant = stringify!(A);
                             quote! { #[rustc_diagnostic_item = #variant] }
@@ -115,28 +117,31 @@ macro_rules! lang_item_table {
                             #diag_item
                             #lang_item
                         };
-                    },)*
-                }
+                    },
+                )*}
             }
         }
 
         impl LangItem {
             pub fn name(self) -> &'static str {
-                match self {
-                    $(Self::$variant => $name,)*
-                }
+                match self {$(
+                    $(#[$attr])*
+                    Self::$variant => $name,
+                )*}
             }
 
             pub fn target(self) -> Target {
-                match self {
-                    $(Self::$variant => $target,)*
-                }
+                match self {$(
+                    $(#[$attr])*
+                    Self::$variant => $target,
+                )*}
             }
             
             pub fn constraints(self) -> &'static [Constraint] {
-                match self {
-                    $(Self::$variant => &[$($constraint),*],)*
-                }
+                match self {$(
+                    $(#[$attr])*
+                    Self::$variant => &[$($constraint),*],
+                )*}
             }
         }
     };

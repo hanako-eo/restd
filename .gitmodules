@@ -1,0 +1,3 @@
+[submodule "trybuild"]
+	path = trybuild
+	url = https://github.com/hanako-eo/restd-trybuild

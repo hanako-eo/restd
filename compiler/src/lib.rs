@@ -12,33 +12,33 @@ use symbol::Symbol;
 mod lang_item;
 mod symbol;
 
-macro_rules! count {
-    ($first:tt, $($tt:tt),+) => { 1 + count!($($tt),+) };
-    ($first:tt) => { 1 };
+macro_rules! count_metas {
+    ($first:meta, $($rest:meta),+) => { 1 + count_metas!($($rest),+) };
+    ($first:meta) => { 1 };
     () => { 0 };
 }
 
 macro_rules! simple_compiler_rule {
-    ($($(#[$($attrss:tt)*])* $($idents:ident)+ $(=> ($($compile_rule:ident),+))?,)+) => {$(
-        simple_compiler_rule!($(#[$($attrss)*])* $($idents)* $(=> ($($compile_rule),+))?);
+    ($($(#[$attr:meta])* $($idents:ident)+ $(=> [$($compile_rule:meta),+])?,)+) => {$(
+        simple_compiler_rule!($(#[$attr])* $($idents)* $(=> [$($compile_rule),+])?);
     )*};
-    ($(#[$($attrss:tt)*])* remarkable $name:ident) => {paste! {
-        simple_compiler_rule!($(#[$($attrss)*])* remarkable $name => ([<rustc_ $name>]));
+    ($(#[$attr:meta])* remarkable $name:ident) => {paste! {
+        simple_compiler_rule!($(#[$attr])* remarkable $name => [[<rustc_ $name>]]);
     }};
-    ($(#[$($attrss:tt)*])* $name:ident) => {paste! {
-        simple_compiler_rule!($(#[$($attrss)*])* $name => ([<rustc_ $name>]));
+    ($(#[$attr:meta])* $name:ident) => {paste! {
+        simple_compiler_rule!($(#[$attr])* $name => [[<rustc_ $name>]]);
     }};
-    ($(#[$($attrss:tt)*])* remarkable $rule_name:ident => ($($compile_rule:ident),+)) => {
+    ($(#[$attr:meta])* remarkable $rule_name:ident => [$($compile_rule:meta),+]) => {
         paste! {
             #[allow(non_upper_case_globals)]
             #[allow(dead_code)]
-            pub(crate) const [<$rule_name _symbols>]: [Symbol; 2 + count!($($compile_rule),+)] = [Symbol(stringify!($rule_name)), Symbol(concat!("compiler::", stringify!($rule_name))), $(Symbol(stringify!($compile_rule))),+];
+            pub(crate) const [<$rule_name _symbols>]: [Symbol; 2 + count_metas!($($compile_rule),+)] = [Symbol(stringify!($rule_name)), Symbol(concat!("compiler::", stringify!($rule_name))), $(Symbol(stringify!($compile_rule))),+];
         }
 
-        simple_compiler_rule!($(#[$($attrss)*])* $rule_name => ($($compile_rule),+));
+        simple_compiler_rule!($(#[$attr])* $rule_name => [$($compile_rule),+]);
     };
-    ($(#[$($attrss:tt)*])* $rule_name:ident => ($($compile_rule:ident),+)) => {
-        $(#[$($attrss)*])*
+    ($(#[$attr:meta])* $rule_name:ident => [$($compile_rule:meta),+]) => {
+        $(#[$attr])*
         #[proc_macro_attribute]
         pub fn $rule_name(attr: TokenStream, item: TokenStream) -> TokenStream {
             let attr = proc_macro2::TokenStream::from(attr);
@@ -64,7 +64,7 @@ simple_compiler_rule! {
     // / 
     // / [#67792]: https://github.com/rust-lang/rust/issues/67792
     // / [const trait RFC]: https://github.com/oli-obk/rfcs/blob/const-trait-impl/text/0000-const-trait-impls.md
-    remarkable const_trait => (const_trait),
+    remarkable const_trait => [const_trait],
     /// The `fundamental` attribute is used to change the behaviour of the compiler
     /// of the targeted type on implementations.
     /// 
@@ -100,7 +100,8 @@ simple_compiler_rule! {
     /// https://stackoverflow.com/questions/59022263/what-is-a-fundamental-type-in-rust
     /// 
     /// [trait solving]: https://rustc-dev-guide.rust-lang.org/traits/resolution.html
-    remarkable fundamental => (fundamental),
+    remarkable fundamental => [fundamental],
+    remarkable full_transparent => [rustc_pub_transparent, repr(transparent)],
 
     // TRAITS RULES
 
@@ -138,7 +139,7 @@ simple_compiler_rule! {
     ///     foo.discreet();
     /// }
     /// ```
-    discreet_macro_impl => (rustc_trivial_field_reads),
+    discreet_macro_impl => [rustc_trivial_field_reads],
     /// The `specialization_trait` attribute is used to tell the compiler to do
     /// [specialized check] during the [trait solving] phase.
     /// 
@@ -150,13 +151,13 @@ simple_compiler_rule! {
     /// 
     /// In more, `unimplementable` force rustc to opts out of the automatic
     /// trait impl for trait objects
-    unimplementable => (rustc_deny_explicit_impl, rustc_do_not_implement_via_object),
+    unimplementable => [rustc_deny_explicit_impl, rustc_do_not_implement_via_object],
     /// The `unsafe_marker` attribute is used to tell the compiler to do
     /// [specialized check] during the [trait solving] phase.
     /// 
     /// [trait solving]: https://rustc-dev-guide.rust-lang.org/traits/resolution.html
     /// [specialized check]: https://rustc-dev-guide.rust-lang.org/traits/specialization.html
-    unsafe_marker => (unsafe_specialization_marker),
+    unsafe_marker => [unsafe_specialization_marker],
 
     // FUNCTIONS RULES
 
@@ -167,7 +168,7 @@ simple_compiler_rule! {
     nounwind,
     /// The `pure_intrinsic` attribute is used to tell the compiler that a
     /// function is an intrinsic function of the compiler.
-    pure_intrinsic => (rustc_intrinsic_must_be_overridden, rustc_intrinsic),
+    pure_intrinsic => [rustc_intrinsic_must_be_overridden, rustc_intrinsic],
 }
 
 /// The `item` attribute is used to tell the compiler that the target is special.
@@ -232,7 +233,6 @@ pub fn item(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 
     let items_attrs = attrs.iter().map(|attr| ItemAttribut::from(attr.meta.clone())).filter(|item| item != &ItemAttribut::Unknown).collect::<HashSet<_>>();
-    println!("{:?}", items_attrs);
     for (constraint, checked) in constraints {
         if checked {
             continue;
