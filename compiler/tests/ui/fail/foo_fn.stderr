@@ -1,0 +1,6 @@
+error: `foo_fn` item expected to have 1 arguments but the definition has 0 arguments
+        please force the function to have 1 arguments
+ --> tests/ui/fail/foo_fn.rs:2:1
+  |
+2 | fn foo() {}
+  | ^^^^^^^^

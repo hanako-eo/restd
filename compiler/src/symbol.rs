@@ -10,7 +10,10 @@ impl PartialEq<syn::Path> for Symbol {
             return false;
         }
 
-        self.0.split("::").zip(other.segments.iter()).all(|(self_segment, other_segment)| other_segment.ident == self_segment)
+        self.0
+            .split("::")
+            .zip(other.segments.iter())
+            .all(|(self_segment, other_segment)| other_segment.ident == self_segment)
     }
 }
 

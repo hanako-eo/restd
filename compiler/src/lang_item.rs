@@ -1,7 +1,7 @@
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 
+use crate::symbol::{REPR, Symbol, TRANSPARENT};
 use crate::{const_trait_symbols, fundamental_symbols};
-use crate::symbol::{Symbol, REPR, TRANSPARENT};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ItemAttribut {
@@ -14,11 +14,16 @@ pub enum ItemAttribut {
 
 impl From<syn::Meta> for ItemAttribut {
     fn from(meta: syn::Meta) -> Self {
-        let containt_at_least_one_of = |path: &syn::Path, symbols: &[Symbol]| symbols.iter().any(|symbol| symbol == path);
+        let containt_at_least_one_of =
+            |path: &syn::Path, symbols: &[Symbol]| symbols.iter().any(|symbol| symbol == path);
 
         match meta {
-            syn::Meta::Path(path) if containt_at_least_one_of(&path, &const_trait_symbols) => Self::ConstTrait,
-            syn::Meta::Path(path) if containt_at_least_one_of(&path, &fundamental_symbols) => Self::Fundamental,
+            syn::Meta::Path(path) if containt_at_least_one_of(&path, &const_trait_symbols) => {
+                Self::ConstTrait
+            }
+            syn::Meta::Path(path) if containt_at_least_one_of(&path, &fundamental_symbols) => {
+                Self::Fundamental
+            }
             syn::Meta::List(list) if REPR == list.path => {
                 // SAFETY: repr cannot take anything else but ident
                 let ident = unsafe { syn::parse2::<syn::Ident>(list.tokens).unwrap_unchecked() };
@@ -28,7 +33,7 @@ impl From<syn::Meta> for ItemAttribut {
                     Self::Unknown
                 }
             }
-            _ => Self::Unknown
+            _ => Self::Unknown,
         }
     }
 }
@@ -62,12 +67,13 @@ pub enum Constraint {
     Auto,
     Unsafety,
     Constness,
-    
+
     // Struct/Union constraints
     Transparent,
     Fundamental,
 
     Generics(usize),
+    Arguments(usize),
 }
 
 impl Constraint {
@@ -78,7 +84,8 @@ impl Constraint {
             Self::Constness => "const",
             Self::Transparent => "transparent",
             Self::Fundamental => "fundamental",
-            Self::Generics(_) => "generics"
+            Self::Generics(_) => "generics",
+            Self::Arguments(_) => "arguments",
         }
     }
 }
@@ -92,7 +99,7 @@ macro_rules! lang_item_table {
 
         impl TryFrom<syn::LitStr> for LangItem {
             type Error = syn::Error;
-        
+
             fn try_from(value: syn::LitStr) -> Result<Self, Self::Error> {
                 match value.value().as_str() {
                     $($(#[$attr])* $name => Ok(Self::$variant),)*
@@ -107,7 +114,7 @@ macro_rules! lang_item_table {
                     $(#[$attr])*
                     Self::$variant => {
                         let diag_item = $diag_item.then(|| {
-                            let variant = stringify!(A);
+                            let variant = stringify!($variant);
                             quote! { #[rustc_diagnostic_item = #variant] }
                         });
                         let lang_item = $lang_item.then(|| {
@@ -136,7 +143,7 @@ macro_rules! lang_item_table {
                     Self::$variant => $target,
                 )*}
             }
-            
+
             pub fn constraints(self) -> &'static [Constraint] {
                 match self {$(
                     $(#[$attr])*
@@ -148,7 +155,7 @@ macro_rules! lang_item_table {
 }
 
 lang_item_table! {
-//  Variant name,    Item name,    Item target,      Contains,    Is diag item,    Is lang item
+    //  Variant name,    Item name,    Item target,      Contains,    Is diag item,    Is lang item
     Sized,           "sized",      Target::Trait,    [],          false,           true;
     Unsize,          "unsize",     Target::Trait,    [],          false,           true;
     Copy,            "copy",       Target::Trait,    [],          false,           true;
@@ -156,70 +163,70 @@ lang_item_table! {
     Drop,            "drop",       Target::Trait,    [],          false,           true;
 
     // TEST ITEMS
-    #[cfg(test)]
-    TestAuto,        "foo_auto",      Target::Trait,    [Auto],      false,           false;
-    #[cfg(test)]
-    TestConstness,   "foo_const",     Target::Trait,    [Constness], false,           false;
-    #[cfg(test)]
-    TestUnsafety,    "foo_unsafe",    Target::Trait,    [Unsafety],  false,           false;
-    #[cfg(test)]
-    TestFnUnsafety,  "foo_fn_unsafe", Target::Fn,       [Unsafety],  false,           false;
+    #[cfg(feature = "test_lang_item")]
+    TestAuto,        "foo_auto",      Target::Trait,    [Auto],         false, false;
+    #[cfg(feature = "test_lang_item")]
+    TestConstness,   "foo_const",     Target::Trait,    [Constness],    false, false;
+    #[cfg(feature = "test_lang_item")]
+    TestUnsafety,    "foo_unsafe",    Target::Trait,    [Unsafety],     false, false;
+    #[cfg(feature = "test_lang_item")]
+    TestFnUnsafety,  "foo_fn_unsafe", Target::Fn,       [Unsafety],     false, false;
+    #[cfg(feature = "test_lang_item")]
+    TestFn,          "foo_fn",        Target::Fn,       [Arguments(1)], false, false;
 }
 
-/*
-Add
-Sub
-Mul
-Div
-Rem
-Neg
-Not
-BitXor
-BitAnd
-BitOr
-Shl
-Shr
-AddAssign
-SubAssign
-MulAssign
-DivAssign
-RemAssign
-BitXorAssign
-BitAndAssign
-BitOrAssign
-ShlAssign
-ShrAssign
-Index
-IndexMut
-PartialEq
-PartialOrd
-
-RangeFrom
-RangeFull
-RangeInclusiveStruct
-RangeInclusiveNew
-Range
-RangeToInclusive
-RangeTo
-
-Deref
-DerefMut
-DerefPure
-DerefTarget
-Receiver
-ReceiverTarget
-LegacyReceiver
-
-Fn
-FnMut
-FnOnce
-
-Iterator
-IteratorNext
-
-Unpin
-Pin
-
-PhantomData
-ManuallyDrop
-*/
+// Add
+// Sub
+// Mul
+// Div
+// Rem
+// Neg
+// Not
+// BitXor
+// BitAnd
+// BitOr
+// Shl
+// Shr
+// AddAssign
+// SubAssign
+// MulAssign
+// DivAssign
+// RemAssign
+// BitXorAssign
+// BitAndAssign
+// BitOrAssign
+// ShlAssign
+// ShrAssign
+// Index
+// IndexMut
+// PartialEq
+// PartialOrd
+//
+// RangeFrom
+// RangeFull
+// RangeInclusiveStruct
+// RangeInclusiveNew
+// Range
+// RangeToInclusive
+// RangeTo
+//
+// Deref
+// DerefMut
+// DerefPure
+// DerefTarget
+// Receiver
+// ReceiverTarget
+// LegacyReceiver
+//
+// Fn
+// FnMut
+// FnOnce
+//
+// Iterator
+// IteratorNext
+//
+// Unpin
+// Pin
+//
+// PhantomData
+// ManuallyDrop

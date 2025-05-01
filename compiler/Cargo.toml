@@ -6,6 +6,9 @@ edition = "2024"
 [lib]
 proc-macro = true
 
+[features]
+test_lang_item = []
+
 [dependencies]
 paste = "1.0"
 proc-macro2 = "1.0"

@@ -1,8 +1,12 @@
+use trybuild::{Args, TestCases};
+
 #[test]
 fn launch_compilation_tests() {
-    let cases = trybuild::TestCases::new();
-    cases.pass("tests/ui/success/*.rs");
-    cases.compile_fail("tests/ui/fail/*.rs");
+    let set_test_items = |args: Args| args.add_cargo_flag(["--features", "test_lang_item"]);
+
+    let cases = TestCases::new();
+    cases.pass_args("tests/ui/success/*.rs", set_test_items);
+    cases.compile_fail_args("tests/ui/fail/*.rs", set_test_items);
 }
 
 #[test]
