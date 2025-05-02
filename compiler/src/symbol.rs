@@ -1,4 +1,5 @@
 pub const REPR: Symbol = Symbol("repr");
+pub const C: Symbol = Symbol("C");
 pub const TRANSPARENT: Symbol = Symbol("transparent");
 
 #[derive(Debug)]

@@ -7,7 +7,7 @@ use paste::paste;
 use proc_macro::TokenStream;
 use quote::quote;
 use symbol::Symbol;
-use syn::{Error, parse_macro_input};
+use syn::{Error, Generics, parse_macro_input};
 
 mod lang_item;
 mod symbol;
@@ -58,12 +58,12 @@ macro_rules! simple_compiler_rule {
 simple_compiler_rule! {
     // PURELY REEXPORTED RULES
 
-    // / The `const_trait` attribute is used to tell the compiler that the targeted
-    // / trait can be used in a const context. Actually used instead of the syntax
-    // / `const trait MyTrait {}` (see [#67792] or [const trait RFC] for more info)
-    // /
-    // / [#67792]: https://github.com/rust-lang/rust/issues/67792
-    // / [const trait RFC]: https://github.com/oli-obk/rfcs/blob/const-trait-impl/text/0000-const-trait-impls.md
+    /// The `const_trait` attribute is used to tell the compiler that the targeted
+    /// trait can be used in a const context. Actually used instead of the syntax
+    /// `const trait MyTrait {}` (see [#67792] or [const trait RFC] for more info)
+    ///
+    /// [#67792]: https://github.com/rust-lang/rust/issues/67792
+    /// [const trait RFC]: https://github.com/oli-obk/rfcs/blob/const-trait-impl/text/0000-const-trait-impls.md
     remarkable const_trait => [const_trait],
     /// The `fundamental` attribute is used to change the behaviour of the compiler
     /// of the targeted type on implementations.
@@ -105,6 +105,10 @@ simple_compiler_rule! {
 
     // TRAITS RULES
 
+    /// The `act_as_function` attribute is used by the compiler to allow a type
+    /// to be call like a function, and it will desugarize the call to call a
+    /// method (used by the traits [`Fn`], [`FnMut`] and [`FnOnce`]).
+    act_as_function => [rustc_paren_sugar],
     /// The `coinductive` attribute is used by the compiler during the process
     /// of [trait solving] to change the default behavior of the compiler
     /// regarding the targeted trait.
@@ -114,7 +118,7 @@ simple_compiler_rule! {
     ///
     /// [trait solving]: https://rustc-dev-guide.rust-lang.org/traits/resolution.html
     /// [coinductive]: https://rustc-dev-guide.rust-lang.org/solve/coinduction.html
-    coinductive,
+    remarkable coinductive,
     /// The `discreet_macro_impl` attribute is used to tell the compiler do not
     /// annotate the field of the targeted implementer as used in the derived
     /// implementation.
@@ -151,7 +155,8 @@ simple_compiler_rule! {
     ///
     /// In more, `unimplementable` force rustc to opts out of the automatic
     /// trait impl for trait objects
-    unimplementable => [rustc_deny_explicit_impl, rustc_do_not_implement_via_object],
+    remarkable unimplementable => [rustc_deny_explicit_impl, rustc_do_not_implement_via_object],
+    remarkable object_unimplementable => [rustc_do_not_implement_via_object],
     /// The `unsafe_marker` attribute is used to tell the compiler to do
     /// [specialized check] during the [trait solving] phase.
     ///
@@ -246,6 +251,8 @@ pub fn item(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
         (Target::Enum, syn::Item::Enum(item)) => (&item.generics, &item.attrs),
         (Target::Union, syn::Item::Union(item)) => (&item.generics, &item.attrs),
+        (Target::Type, syn::Item::Type(item)) => (&item.generics, &item.attrs),
+        (Target::EnumVariant, syn::Item::Verbatim(_)) => (&Generics::default(), &Vec::new()),
         (target, _) => {
             return syn::Error::new_spanned(
                 item,
@@ -290,7 +297,13 @@ pub fn item(attr: TokenStream, item: TokenStream) -> TokenStream {
             | Constraint::Arguments(_) => false,
             Constraint::Constness => items_attrs.contains(&ItemAttribut::ConstTrait),
             Constraint::Fundamental => items_attrs.contains(&ItemAttribut::Fundamental),
+            Constraint::CLayout => items_attrs.contains(&ItemAttribut::CLayout),
             Constraint::Transparent => items_attrs.contains(&ItemAttribut::Transparent),
+            Constraint::Coinductive => items_attrs.contains(&ItemAttribut::Coinductive),
+            Constraint::ObjectUnimplementable => {
+                items_attrs.contains(&ItemAttribut::ObjectUnimplementable)
+            }
+            Constraint::Unimplementable => items_attrs.contains(&ItemAttribut::Unimplementable),
         };
 
         if !checked {
