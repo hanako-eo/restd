@@ -65,6 +65,7 @@ pub enum Target {
     Struct,
     Union,
     Fn,
+    Macro,
 
     Type,
     EnumVariant,
@@ -78,6 +79,7 @@ impl Target {
             Self::Struct => "struct",
             Self::Union => "union",
             Self::Fn => "function",
+            Self::Macro => "macro",
             Self::Type => "type",
             Self::EnumVariant => "enum variant",
         }
@@ -390,6 +392,9 @@ lang_item_table! {
     PanicCannotUnwind, "panic_cannot_unwind", Target::Fn, [Arguments(0)], No, Inherited;
     PanicInCleanup, "panic_in_cleanup", Target::Fn, [Arguments(0)], No, Inherited;
     ConstPanicFmt, "const_panic_fmt", Target::Fn, [Arguments(1), Constness], No, Inherited;
+
+    // macros
+    MacroPanic, "macro_panic", Target::Macro, [], Named("core_panic_macro"), No;
 
     // ffis
     CStr, "cstr", Target::Struct, [Transparent], Named("cstr_type"), Named("CStr");

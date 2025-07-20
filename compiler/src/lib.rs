@@ -1,13 +1,18 @@
+#![feature(maybe_uninit_array_assume_init)]
+#![feature(maybe_uninit_uninit_array)]
 #![feature(let_chains)]
 
 use std::collections::{HashMap, HashSet};
+use std::mem::MaybeUninit;
 
 use lang_item::{Constraint, ItemAttribut, LangItem, Target};
 use paste::paste;
 use proc_macro::TokenStream;
 use quote::quote;
 use symbol::Symbol;
-use syn::{Error, Generics, parse_macro_input};
+use syn::parse::Parser;
+use syn::punctuated::Punctuated;
+use syn::{Error, Generics, Ident, Token, parse_macro_input};
 
 mod lang_item;
 mod symbol;
@@ -21,7 +26,7 @@ macro_rules! count_metas {
 macro_rules! simple_compiler_rule {
     ($($(#[$attr:meta])* $($idents:ident)+ $(=> [$($compile_rule:meta),+])?,)+) => {$(
         simple_compiler_rule!($(#[$attr])* $($idents)* $(=> [$($compile_rule),+])?);
-    )*};
+    )+};
     ($(#[$attr:meta])* remarkable $name:ident) => {paste! {
         simple_compiler_rule!($(#[$attr])* remarkable $name => [[<rustc_ $name>]]);
     }};
@@ -50,6 +55,85 @@ macro_rules! simple_compiler_rule {
                     $(#[$compile_rule])+
                     #item
                 }
+            }.into()
+        }
+    };
+}
+
+fn check_attribute_validity<const N: usize>(
+    attr: TokenStream,
+    options: [&[Symbol]; N],
+) -> syn::Result<[Ident; N]> {
+    let attrs = Punctuated::<Ident, Token![,]>::parse_terminated.parse(attr)?;
+    if attrs.len() != N {
+        return Err(Error::new_spanned(
+            &attrs,
+            format!(
+                "must have {} item{} instead of {}",
+                N,
+                if N > 1 { "s" } else { "" },
+                attrs.len()
+            ),
+        ));
+    }
+
+    let error = attrs
+        .iter()
+        .zip(options)
+        .filter_map(|(ident, symbols)| {
+            (!symbols.iter().any(|symbol| symbol == ident)).then(|| {
+                Error::new_spanned(
+                    ident,
+                    match symbols.len() {
+                        0 => "should have no value".to_string(),
+                        n => symbols.iter().skip(1).enumerate().fold(
+                            format!("should be {}", symbols[0]),
+                            |acc, (i, s)| match i == n - 2 {
+                                true => format!("{acc} or {s}"),
+                                false => format!("{acc}, {s}"),
+                            },
+                        ),
+                    },
+                )
+            })
+        })
+        .reduce(|mut acc, err| {
+            acc.combine(err);
+            acc
+        });
+    if let Some(err) = error {
+        return Err(err);
+    }
+
+    let mut array = MaybeUninit::<Ident>::uninit_array();
+    for (i, ident) in attrs.into_iter().enumerate() {
+        array[i].write(ident);
+    }
+    Ok(unsafe { MaybeUninit::array_assume_init(array) })
+}
+
+macro_rules! semi_complex_compiler_rule {
+    ($($(#[$attr:meta])* $name:ident ($($($option:ident)|+),* $(,)?) => fn ([$($arg:ident),* $(,)?] : $ty:ty) $(-> $return_ty:ty)? $body:block ,)+) => {$(
+        semi_complex_compiler_rule!($(#[$attr])* $name ($($($option)|+),*) => fn ([$($arg),*] : $ty) $(-> $return_ty)? $body);
+    )+};
+    ($(#[$attr:meta])* $name:ident ($($($option:ident)|+),* $(,)?) => fn ([$($arg:ident),* $(,)?] : $ty:ty) $(-> $return_ty:ty)? $body:block) => {
+        $(#[$attr])*
+        #[proc_macro_attribute]
+        pub fn $name(attr: TokenStream, item: TokenStream) -> TokenStream {
+            let options = [$(&[$(Symbol(stringify!($option))),+] as &[Symbol]),*];
+
+            let item = proc_macro2::TokenStream::from(item);
+            let attrs = match check_attribute_validity(attr, options) {
+                Ok(attrs) => attrs,
+                Err(error) => return error.into_compile_error().into(),
+            };
+
+            fn inner_codegen([$($arg),*] : $ty) $(-> $return_ty)? $body
+            let attrs = inner_codegen(attrs);
+
+            quote! {
+                #attrs
+                #item
             }.into()
         }
     };
@@ -164,6 +248,19 @@ simple_compiler_rule! {
     /// [specialized check]: https://rustc-dev-guide.rust-lang.org/traits/specialization.html
     unsafe_marker => [unsafe_specialization_marker],
 
+    // MACROS RULES
+
+    /// The `builtin_macro` attribute is used to tell the compiler that the targeted
+    /// macro does not need to have an implementation, the compiler will replace
+    /// it with an internal implementation.
+    builtin_macro,
+    /// The `panic_macro` attribute is used to tell the compiler, that the targeted
+    /// macro is the `panic!` macro.
+    panic_macro => [rustc_builtin_macro(core_panic)],
+    /// The `unreachable_macro` attribute is used to tell the compiler, that the targeted
+    /// macro is the `unreachable!` macro.
+    unreachable_macro => [rustc_builtin_macro(unreachable)],
+
     // FUNCTIONS RULES
 
     /// The `nounwind` attribute refer to the [unwind] principal.
@@ -174,6 +271,16 @@ simple_compiler_rule! {
     /// The `pure_intrinsic` attribute is used to tell the compiler that a
     /// function is an intrinsic function of the compiler.
     pure_intrinsic => [rustc_intrinsic_must_be_overridden, rustc_intrinsic],
+}
+
+semi_complex_compiler_rule! {
+    ///
+    macro_transparency(opaque | semiopaque | semitransparent | transparent) => fn ([transparency]: [Ident; 1]) -> proc_macro2::TokenStream {
+        let transparency = transparency.to_string();
+        quote! {
+            #[rustc_macro_transparency = #transparency]
+        }
+    },
 }
 
 /// The `item` attribute is used to tell the compiler that the target is special.
@@ -251,6 +358,7 @@ pub fn item(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
         (Target::Enum, syn::Item::Enum(item)) => (&item.generics, &item.attrs),
         (Target::Union, syn::Item::Union(item)) => (&item.generics, &item.attrs),
+        (Target::Macro, syn::Item::Macro(item)) => (&Generics::default(), &item.attrs),
         (Target::Type, syn::Item::Type(item)) => (&item.generics, &item.attrs),
         (Target::EnumVariant, syn::Item::Verbatim(_)) => (&Generics::default(), &Vec::new()),
         (target, _) => {
