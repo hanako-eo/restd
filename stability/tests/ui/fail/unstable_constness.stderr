@@ -1,0 +1,11 @@
+error: attributes `#[rustc_const_unstable]`, `#[rustc_const_stable]` and `#[rustc_const_stable_indirect]` require the function or method to be `const`
+ --> tests/ui/fail/unstable_constness.rs:6:1
+  |
+6 | fn test() {}
+  | ^^^^^^^^^
+  |
+help: make the function or method const
+ --> tests/ui/fail/unstable_constness.rs:6:1
+  |
+6 | fn test() {}
+  | ^^^^^^^^^

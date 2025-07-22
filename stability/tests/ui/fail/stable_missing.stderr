@@ -1,0 +1,7 @@
+error: since need to be set
+ --> tests/ui/fail/stable_missing.rs:5:1
+  |
+5 | #[stability::stable(feature = "test")]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `stability::stable` (in Nightly builds, run with -Z macro-backtrace for more info)

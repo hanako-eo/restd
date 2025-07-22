@@ -1,0 +1,13 @@
+error: cannot have intrinsic and stabilisable at the same time
+  --> tests/ui/fail/unstable_stable+intricsic.rs:5:1
+   |
+5  | / #[stability::unstable(
+6  | |     feature = "test",
+7  | |     issue = "none",
+8  | |     reason = "sd",
+...  |
+11 | |     intrinsic
+12 | | )]
+   | |__^
+   |
+   = note: this error originates in the attribute macro `stability::unstable` (in Nightly builds, run with -Z macro-backtrace for more info)

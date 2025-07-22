@@ -1,0 +1,13 @@
+error: since, note and suggestion need to be set
+ --> tests/ui/fail/deprecated.rs:5:1
+  |
+5 | #[stability::deprecated(feature = "test")]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `stability::deprecated` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: unrecognized argument
+ --> tests/ui/fail/deprecated.rs:5:25
+  |
+5 | #[stability::deprecated(feature = "test")]
+  |                         ^^^^^^^^^^^^^^^^
